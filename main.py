@@ -15,6 +15,7 @@ from agents.investment_agent import InvestmentResearchAgent
 from workflows.prompt_chaining import PromptChainingWorkflow
 from workflows.routing import RoutingWorkflow
 from workflows.evaluator_optimizer import EvaluatorOptimizerWorkflow
+from workflows.langgraph_orchestration import LangGraphOrchestrator
 from config import Config
 
 class MultiAgentFinancialAnalysisSystem:
@@ -35,7 +36,11 @@ class MultiAgentFinancialAnalysisSystem:
         self.routing_workflow = RoutingWorkflow()
         self.evaluator_optimizer_workflow = EvaluatorOptimizerWorkflow()
         
+        # Initialize LangGraph orchestrator
+        self.langgraph_orchestrator = LangGraphOrchestrator()
+        
         print("Multi-Agent Financial Analysis System initialized")
+        print("LangGraph orchestration enabled")
     
     def analyze_agent_functions(self, symbol: str) -> Dict[str, Any]:
         """Analyze using autonomous agent functions."""
@@ -127,6 +132,40 @@ class MultiAgentFinancialAnalysisSystem:
             print(f"Analysis error: {str(e)}")
             return {"status": "error", "error": str(e)}
     
+    def analyze_langgraph(self, symbol: str, workflow_type: str = "comprehensive", focus: str = "comprehensive") -> Dict[str, Any]:
+        """Analyze using LangGraph orchestration."""
+        print(f"\nAnalyzing {symbol} with LangGraph Orchestration ({workflow_type})")
+        print("=" * 50)
+        
+        try:
+            result = self.langgraph_orchestrator.run(symbol, focus=focus, workflow_type=workflow_type)
+            
+            if result["status"] == "success":
+                print("\n✅ LangGraph Orchestration Completed Successfully!")
+                combined_result = result.get("result", {})
+                
+                if combined_result:
+                    print(f"\nWorkflow Type: {combined_result.get('workflow_type', 'unknown')}")
+                    print(f"Status: {combined_result.get('status', 'unknown')}")
+                    
+                    nodes_executed = combined_result.get('nodes_executed', [])
+                    print(f"Nodes Executed: {len(nodes_executed)}")
+                    print(f"Execution Path: {' → '.join(nodes_executed)}")
+                    
+                    if combined_result.get('summary'):
+                        print(f"\nSummary:\n{combined_result['summary']}")
+                
+                return result
+            else:
+                print(f"Error: {result.get('error', 'Unknown error')}")
+                return result
+                
+        except Exception as e:
+            print(f"LangGraph orchestration error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {"status": "error", "error": str(e)}
+    
     def run_comprehensive_analysis(self, symbol: str):
         """Run comprehensive analysis using all workflows."""
         print(f"\nCOMPREHENSIVE MULTI-AGENT ANALYSIS: {symbol}")
@@ -176,6 +215,8 @@ class MultiAgentFinancialAnalysisSystem:
         print("  'prompt <symbol>' - Analyze with prompt chaining")
         print("  'routing <symbol>' - Analyze with routing workflow")
         print("  'evaluator <symbol>' - Analyze with evaluator-optimizer")
+        print("  'langgraph <workflow_type> <symbol>' - Analyze with LangGraph orchestration")
+        print("     workflow_type: investment_agent, routing, prompt_chaining, evaluator_optimizer, comprehensive")
         print("  'all <symbol>' - Run comprehensive analysis")
         print("  'learning' - Show learning summary")
         print("  'quit' - Exit")
@@ -201,6 +242,17 @@ class MultiAgentFinancialAnalysisSystem:
                 elif user_input.startswith('evaluator '):
                     symbol = user_input.split(' ', 1)[1].upper()
                     self.analyze_evaluator_optimizer(symbol)
+                elif user_input.startswith('langgraph '):
+                    parts = user_input.split(' ', 2)
+                    if len(parts) >= 3:
+                        workflow_type = parts[1]
+                        symbol = parts[2].upper()
+                        self.analyze_langgraph(symbol, workflow_type=workflow_type)
+                    elif len(parts) == 2:
+                        symbol = parts[1].upper()
+                        self.analyze_langgraph(symbol, workflow_type="comprehensive")
+                    else:
+                        print("Usage: langgraph <workflow_type> <symbol>")
                 elif user_input.startswith('all '):
                     symbol = user_input.split(' ', 1)[1].upper()
                     self.run_comprehensive_analysis(symbol)
