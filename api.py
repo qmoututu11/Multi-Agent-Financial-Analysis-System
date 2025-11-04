@@ -54,9 +54,9 @@ class AnalysisRequest(BaseModel):
     """Request model for analysis."""
     symbol: str = Field(..., description="Stock symbol to analyze", example="AAPL")
     workflow_type: str = Field(
-        default="comprehensive",
-        description="Type of workflow (always 'comprehensive' - uses all specialists)",
-        example="comprehensive"
+        default="agentic",
+        description="Type of workflow (always 'agentic' - planner-driven, adaptive execution)",
+        example="agentic"
     )
     focus: str = Field(
         default="comprehensive",
@@ -122,7 +122,7 @@ async def analyze_stock(request: AnalysisRequest):
     
     try:
         # Validate workflow_type
-        valid_workflows = ["comprehensive"]
+        valid_workflows = ["agentic"]
         if request.workflow_type not in valid_workflows:
             raise HTTPException(
                 status_code=400,

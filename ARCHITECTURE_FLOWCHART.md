@@ -1,6 +1,6 @@
 # Multi-Agent Financial Analysis System - Architecture Flowchart
 
-## System Architecture Overview
+## Agentic Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -11,18 +11,30 @@
                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │              LangGraphOrchestrator (langgraph_orchestration.py)     │
+│                         AGENTIC WORKFLOW                             │
 │                                                                      │
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │  START Node: Initialize State                                │  │
 │  │  • Initialize nodes_executed, errors, timestamp             │  │
-│  │  • Set workflow_type to "comprehensive"                       │  │
+│  │  • Initialize execution_plan, executed_agents, reflection_results │
+│  │  • Set workflow_type to "agentic"                             │  │
 │  └──────────────────────┬───────────────────────────────────────┘  │
 │                         │                                           │
 │                         ▼                                           │
 │  ┌──────────────────────────────────────────────────────────────┐  │
-│  │  ROUTE Node: Determine Specialist Execution                  │  │
-│  │  • Based on focus: news, earnings, market, forecast, or all  │  │
-│  │  • Routes to appropriate first specialist                     │  │
+│  │  PLANNER AGENT: Dynamic Execution Planning                   │  │
+│  │  • LLM analyzes symbol, focus, and user query               │  │
+│  │  • Decides which specialist agents to run                    │  │
+│  │  • Creates execution_order (not fixed!)                     │  │
+│  │  • Provides reasoning for plan                              │  │
+│  │  • Example: "news_specialist → earnings_specialist"        │  │
+│  └──────────────────────┬───────────────────────────────────────┘  │
+│                         │                                           │
+│                         ▼                                           │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │  ROUTE Node: Route to First Agent in Plan                    │  │
+│  │  • Uses execution_plan from planner                           │  │
+│  │  • Routes to first agent in execution_order                  │  │
 │  └──────────────────────┬───────────────────────────────────────┘  │
 │                         │                                           │
 │         ┌───────────────┼───────────────┬──────────────┐           │
@@ -31,23 +43,47 @@
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
 │  │   NEWS    │  │ EARNINGS │  │  MARKET   │  │ FORECAST  │         │
 │  │ SPECIALIST│  │SPECIALIST│  │ SPECIALIST│  │SPECIALIST │         │
+│  │           │  │          │  │           │  │           │         │
+│  │ (if in    │  │ (if in   │  │ (if in    │  │ (if in    │         │
+│  │  plan)    │  │  plan)   │  │  plan)    │  │  plan)    │         │
 │  └────┬──────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘         │
 │       │               │              │             │                │
 │       └───────────────┴──────────────┴─────────────┘                │
 │                         │                                           │
 │                         ▼                                           │
 │  ┌──────────────────────────────────────────────────────────────┐  │
-│  │  COMBINE RESULTS Node: Merge All Specialist Results          │  │
-│  │  • Collect results from executed specialists only            │  │
+│  │  REFLECTION Node: Evaluate Agent Output                       │  │
+│  │  • LLM evaluates output quality (0.0-1.0)                   │  │
+│  │  • Identifies gaps and weaknesses                            │  │
+│  │  • Decides next action:                                      │  │
+│  │    - continue: Output good, proceed to next agent            │  │
+│  │    - re_run: Output incomplete, re-run current agent         │  │
+│  │    - call_agent: Need additional agent to fill gaps          │  │
+│  │    - gather_data: Need more information                       │  │
+│  └──────────────────────┬───────────────────────────────────────┘  │
+│                         │                                           │
+│         ┌───────────────┼───────────────┬──────────────┐           │
+│         │               │               │              │           │
+│         ▼               ▼               ▼              ▼           │
+│    CONTINUE        RE_RUN          CALL_AGENT    GATHER_DATA      │
+│    (to next)      (same agent)    (new agent)    (more data)      │
+│         │               │               │              │           │
+│         └───────────────┴───────────────┴──────────────┘           │
+│                         │                                           │
+│                         ▼                                           │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │  COMBINE RESULTS Node: Merge All Executed Agents            │  │
+│  │  • Collect results from executed_agents (not fixed list)    │  │
 │  │  • Display summary of each specialist's findings             │  │
 │  └──────────────────────┬───────────────────────────────────────┘  │
 │                         │                                           │
 │                         ▼                                           │
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │  EVALUATOR-OPTIMIZER Node: Quality Check & Refinement        │  │
-│  │  • LLM evaluates analysis quality (0.0-1.0)                  │  │
+│  │  • LLM evaluates combined analysis quality (0.0-1.0)         │  │
 │  │  • Identifies weaknesses and gathers additional data          │  │
-│  │  • Iteratively refines analysis (up to 3 iterations)         │  │
+│  │  • Iteratively refines analysis (up to 3 iterations)          │  │
+│  │  • Continues until quality threshold met                      │  │
 │  └──────────────────────┬───────────────────────────────────────┘  │
 │                         │                                           │
 │                         ▼                                           │
@@ -72,26 +108,89 @@
 ## Detailed Component Breakdown
 
 ### 1. LangGraphOrchestrator (langgraph_orchestration.py)
-**Role:** High-level orchestration and workflow coordination using LangGraph
+**Role:** Agentic workflow orchestration with dynamic planning and reflection
 
 **Responsibilities:**
 - State management across the entire workflow (TypedDict with Annotated lists)
-- Conditional routing based on user focus (news, earnings, market, forecast, comprehensive)
-- Coordinating 4 specialist agents
-- Managing execution flow (sequential with conditional skipping)
+- **Planner Agent Integration**: LLM decides which specialists to run
+- **Reflection Node Integration**: Evaluates each agent's output and adapts execution
+- Dynamic routing based on execution plan and reflection decisions
+- Coordinating 4 specialist agents (only those in the plan)
+- Managing execution flow (adaptive, not fixed)
 - Combining results from executed specialists
 - Automatic quality evaluation and optimization
 
 **Key Features:**
 - Uses LangGraph StateGraph for workflow management
-- Conditional routing based on focus parameter
-- Sequential specialist execution (news → earnings → market → forecast)
-- State persistence across nodes (nodes_executed, errors, results)
+- **Agentic Planning**: Planner Agent creates dynamic execution plan
+- **Adaptive Execution**: Reflection Nodes evaluate and adapt after each agent
+- State persistence across nodes (nodes_executed, executed_agents, reflection_results)
 - Automatic evaluator-optimizer execution after combine_results
 
 ---
 
-### 2. Specialist Agents (agents/specialist_agents/)
+### 2. Planner Agent (workflows/planner_agent.py) ⭐ NEW
+**Role:** LLM-powered dynamic execution planning
+
+**Responsibilities:**
+- Analyzes user query, symbol, and focus
+- Decides which specialist agents should run
+- Creates execution order (not necessarily all agents)
+- Provides reasoning for the plan
+
+**LLM Prompt:**
+- Describes available specialist agents
+- Asks LLM to decide which agents are needed
+- Requests execution order and reasoning
+
+**Output:**
+```json
+{
+  "agents_to_run": ["news_specialist", "earnings_specialist"],
+  "execution_order": ["news_specialist", "earnings_specialist"],
+  "reasoning": "User wants comprehensive analysis, so all agents needed",
+  "estimated_iterations": 1
+}
+```
+
+**Fallback:** If LLM fails, defaults to all 4 agents for "comprehensive" focus
+
+---
+
+### 3. Reflection Node (workflows/reflection_node.py) ⭐ NEW
+**Role:** Self-evaluation and adaptive decision-making
+
+**Responsibilities:**
+- Evaluates agent output quality after each specialist runs
+- Identifies gaps and weaknesses in the output
+- Decides next action based on evaluation
+
+**LLM Evaluation:**
+- Quality score (0.0-1.0)
+- Gaps identified
+- Recommended action
+
+**Actions:**
+- **continue**: Output is sufficient, proceed to next agent in plan
+- **re_run**: Output incomplete, remove agent from executed_agents and re-run
+- **call_agent**: Add new agent to execution_plan to fill gaps
+- **gather_data**: Need more information before proceeding
+
+**Output:**
+```json
+{
+  "is_sufficient": true/false,
+  "quality_score": 0.85,
+  "gaps_identified": ["missing price data"],
+  "recommended_action": "gather_data",
+  "target_agent": null,
+  "reasoning": "Output is good but missing current price"
+}
+```
+
+---
+
+### 4. Specialist Agents (agents/specialist_agents/)
 
 #### NewsSpecialistAgent (news_agent.py)
 **Role:** News sentiment analysis with LLM-powered prompt chaining
@@ -185,7 +284,7 @@
 
 ---
 
-### 3. Workflows
+### 5. Workflows
 
 #### PromptChainingWorkflow (prompt_chaining.py)
 **Role:** Sequential LLM-powered news processing pipeline
@@ -220,134 +319,214 @@
 
 ---
 
-## Comprehensive Workflow Example
+## Agentic Workflow Example
 
 ```
 User: "Analyze AAPL" (or "AAPL comprehensive")
 
 1. START Node
-   └─> Initialize state, set workflow_type="comprehensive"
+   └─> Initialize state, set workflow_type="agentic"
+        Initialize execution_plan={}, executed_agents=[]
 
-2. ROUTE Node
-   └─> Focus is "comprehensive" → route to news_specialist
+2. PLANNER AGENT Node ⭐
+   ├─> LLM analyzes: symbol="AAPL", focus="comprehensive"
+   ├─> LLM decides: "User wants comprehensive analysis, need all 4 agents"
+   └─> Creates plan:
+       {
+         "agents_to_run": ["news_specialist", "earnings_specialist", 
+                          "market_specialist", "forecast_specialist"],
+         "execution_order": ["news_specialist", "earnings_specialist", 
+                            "market_specialist", "forecast_specialist"],
+         "reasoning": "Comprehensive focus requires all specialists"
+       }
 
-3. NEWS SPECIALIST Node
+3. ROUTE Node
+   └─> Routes to first agent in plan: news_specialist
+
+4. NEWS SPECIALIST Node
    ├─> Fetch news from Yahoo Finance
    ├─> Prompt Chaining Workflow:
    │   ├─> Preprocess with LLM
    │   ├─> Classify sentiment with LLM
    │   ├─> Extract entities with LLM
    │   └─> Summarize with LLM
-   └─> Continue to earnings_specialist (focus=comprehensive)
+   ├─> Update executed_agents: ["news_specialist"]
+   └─> → REFLECTION Node
 
-4. EARNINGS SPECIALIST Node
+5. REFLECTION Node ⭐
+   ├─> LLM evaluates news_specialist output:
+   │   - Quality score: 0.85
+   │   - Gaps: None
+   │   - Action: continue
+   └─> Decision: continue to next agent
+
+6. ROUTE Node (from reflection)
+   └─> Routes to next agent in plan: earnings_specialist
+
+7. EARNINGS SPECIALIST Node
    ├─> Fetch company info from Yahoo Finance
    ├─> Fetch SEC filings (10-K, 10-Q) from EDGAR
-   └─> LLM valuation analysis → Continue to market_specialist
+   ├─> LLM valuation analysis
+   ├─> Update executed_agents: ["news_specialist", "earnings_specialist"]
+   └─> → REFLECTION Node
 
-5. MARKET SPECIALIST Node
-   ├─> Fetch current price, volume
-   └─> LLM trend analysis → Continue to forecast_specialist
+8. REFLECTION Node ⭐
+   ├─> LLM evaluates earnings_specialist output:
+   │   - Quality score: 0.70
+   │   - Gaps: ["missing current price data"]
+   │   - Action: gather_data
+   └─> Decision: gather more data (price) before continuing
 
-6. FORECAST SPECIALIST Node ⭐ NEW
-   ├─> Fetch historical prices (6 months)
-   ├─> Calculate trend, volatility, statistics
-   └─> LLM forecast generation → Continue to combine_results
+9. ROUTE Node (from reflection - gather_data)
+   └─> Routes to market_specialist (to get price data)
 
-7. COMBINE RESULTS Node
-   ├─> Collect results from all 4 specialists
-   ├─> Display summary of each specialist's findings
-   └─> Continue to evaluator_optimizer
+10. MARKET SPECIALIST Node
+    ├─> Fetch current price, volume
+    ├─> LLM trend analysis
+    ├─> Update executed_agents: ["news_specialist", "earnings_specialist", "market_specialist"]
+    └─> → REFLECTION Node
 
-8. EVALUATOR-OPTIMIZER Node
-   ├─> LLM evaluates combined analysis quality
-   ├─> If score < threshold:
-   │   ├─> Identify weaknesses
-   │   ├─> Gather additional data if needed
-   │   └─> Refine analysis (up to 3 iterations)
-   └─> Continue to finalize
+11. REFLECTION Node ⭐
+    ├─> LLM evaluates market_specialist output:
+    │    - Quality score: 0.90
+    │    - Gaps: None
+    │    - Action: continue
+    └─> Decision: continue to next agent in plan
 
-9. FINALIZE Node
-   ├─> Generate comprehensive report:
-   │   ├─> Financial Overview (earnings)
-   │   ├─> Market Analysis (market)
-   │   ├─> News Sentiment (news)
-   │   ├─> Financial Forecast (forecast) ⭐ NEW
-   │   └─> Investment Recommendations
-   └─> Return final results
+12. ROUTE Node (from reflection)
+    └─> Routes to next agent in plan: forecast_specialist
+
+13. FORECAST SPECIALIST Node
+    ├─> Fetch historical prices (6 months)
+    ├─> Calculate trend, volatility, statistics
+    ├─> LLM forecast generation
+    ├─> Update executed_agents: ["news_specialist", "earnings_specialist", 
+                                 "market_specialist", "forecast_specialist"]
+    └─> → REFLECTION Node
+
+14. REFLECTION Node ⭐
+    ├─> LLM evaluates forecast_specialist output:
+    │    - Quality score: 0.88
+    │    - Gaps: None
+    │    - Action: continue
+    └─> Decision: all agents in plan executed, proceed to combine_results
+
+15. COMBINE RESULTS Node
+    ├─> Collect results from executed_agents:
+    │    - news_specialist_result
+    │    - earnings_specialist_result
+    │    - market_specialist_result
+    │    - forecast_specialist_result
+    ├─> Display summary of each specialist's findings
+    └─> Continue to evaluator_optimizer
+
+16. EVALUATOR-OPTIMIZER Node
+    ├─> LLM evaluates combined analysis quality
+    ├─> If score < threshold:
+    │   ├─> Identify weaknesses
+    │   ├─> Gather additional data if needed
+    │   └─> Refine analysis (up to 3 iterations)
+    └─> Continue to finalize
+
+17. FINALIZE Node
+    ├─> Generate comprehensive report:
+    │   ├─> Financial Overview (earnings)
+    │   ├─> Market Analysis (market)
+    │   ├─> News Sentiment (news)
+    │   ├─> Financial Forecast (forecast)
+    │   └─> Investment Recommendations
+    └─> Return final results
 ```
 
-## Focus-Based Routing
+## Focus-Based Planning
 
 ```
-Focus Options:
-├─> "news"      → news_specialist only
-├─> "earnings"  → earnings_specialist only
-├─> "market"    → market_specialist only
-├─> "forecast"  → market_specialist → forecast_specialist ⭐ NEW
-└─> "comprehensive" → All 4 specialists sequentially
+Focus Options (affects Planner Agent's decision):
+├─> "news"      → Planner may decide: news_specialist only
+├─> "earnings"  → Planner may decide: earnings_specialist + market_specialist (for context)
+├─> "market"    → Planner may decide: market_specialist + forecast_specialist
+├─> "forecast"  → Planner may decide: forecast_specialist + market_specialist (for context)
+└─> "comprehensive" → Planner decides: all 4 specialists
+
+Note: Planner Agent makes intelligent decisions, not hard-coded rules!
 ```
 
 ## Key Architecture Principles
 
-### 1. Real Data + LLM Intelligence
+### 1. Agentic Planning (Not Fixed Flow)
+- **Planner Agent**: LLM decides which agents to run based on query
+- **Dynamic Execution**: Execution order adapts based on plan, not fixed sequence
+- **Intelligent Selection**: Planner considers context, focus, and user needs
+
+### 2. Self-Reflection and Adaptation
+- **Reflection Nodes**: Each agent's output is evaluated by LLM
+- **Adaptive Routing**: Execution adapts based on reflection decisions
+- **Quality-Driven**: System continues until quality threshold met
+
+### 3. Real Data + LLM Intelligence
 - **Data Sources**: Always fetch real data from APIs (Yahoo Finance, SEC EDGAR)
 - **LLM Role**: Analyze and interpret real data, not generate fake data
 - **Why**: Prevents hallucination, ensures accuracy, provides current information
 
-### 2. LLM-Powered Analysis
+### 4. LLM-Powered Analysis
 - All specialist agents use LLMs for intelligent analysis
 - Not just rule-based thresholds - context-aware insights
 - Considers sector/industry, market conditions, historical patterns
 
-### 3. Stateful Workflow Management
+### 5. Stateful Workflow Management
 - LangGraph manages state across entire workflow
-- Tracks which specialists executed (nodes_executed)
+- Tracks which specialists executed (executed_agents)
+- Tracks execution plan (execution_plan)
+- Tracks reflection results (reflection_results)
 - Handles errors gracefully
-- Supports conditional routing based on focus
 
-### 4. Automatic Quality Assurance
+### 6. Automatic Quality Assurance
 - Evaluator-optimizer automatically runs after combine_results
 - LLM evaluates quality across multiple dimensions
 - Iteratively refines analysis with data gathering
 - Ensures high-quality output
 
-### 5. Modular Specialist Design
+### 7. Modular Specialist Design
 - Each specialist is independent and focused
-- Can run individually or as part of comprehensive workflow
-- Easy to add new specialists (e.g., forecast was added)
+- Can run individually or as part of agentic workflow
+- Easy to add new specialists
+- Planner decides which specialists to use
 
 ## Comparison: Old vs New Architecture
 
-| Aspect | Old Architecture | New Architecture |
+| Aspect | Old Architecture | New Architecture (Agentic) |
 |--------|----------------|----------------|
-| **Workflow Types** | Multiple (investment_agent, routing, prompt_chaining, evaluator_optimizer) | Single comprehensive workflow |
-| **Specialist Count** | 3 (news, earnings, market) | 4 (news, earnings, market, forecast) ⭐ |
-| **Prompt Chaining** | Standalone workflow | Integrated into news_agent |
-| **Evaluator** | Optional standalone | Automatic after combine_results |
-| **Routing** | LLM-based workflow selection | Focus-based specialist routing |
-| **Data Sources** | Yahoo Finance only | Yahoo Finance + SEC EDGAR ⭐ |
-| **LLM Usage** | Some agents | All specialists use LLMs ⭐ |
+| **Workflow Type** | "comprehensive" (fixed) | "agentic" (planner-driven) |
+| **Execution Flow** | Fixed sequence (all agents) | Dynamic (planner decides) |
+| **Routing Logic** | Focus-based (hard-coded) | Planner-based (LLM-decided) |
+| **Quality Control** | Only at end (evaluator) | After each agent (reflection) |
+| **Adaptation** | None | Reflection nodes adapt execution |
+| **Specialist Count** | 4 (news, earnings, market, forecast) | 4 (same, but planner decides usage) |
+| **Prompt Chaining** | Integrated into news_agent | Same |
+| **Evaluator** | Automatic after combine | Same |
+| **Data Sources** | Yahoo Finance + SEC EDGAR | Same |
+| **LLM Usage** | All specialists use LLMs | Same + Planner + Reflection |
 
 ## Technology Stack
 
-- **LangGraph**: Workflow orchestration and state management
+- **LangGraph**: Agentic workflow orchestration and state management
 - **LangChain**: LLM integration and agent framework
-- **OpenAI GPT**: Intelligent analysis and reasoning
+- **OpenAI GPT**: Intelligent analysis, planning, and reflection
 - **Yahoo Finance API**: Real-time financial data
-- **SEC EDGAR API**: Official regulatory filings ⭐
+- **SEC EDGAR API**: Official regulatory filings
 - **FastAPI**: REST API backend
 - **React.js**: Frontend UI (optional)
 
 ## Key Takeaways
 
-1. **LangGraph Orchestration**: Manages stateful workflow with conditional routing
-2. **4 Specialist Agents**: Each uses LLM for intelligent, context-aware analysis
-3. **Real Data Sources**: Yahoo Finance + SEC EDGAR prevent hallucination
-4. **Automatic Quality**: Evaluator-optimizer ensures high-quality output
-5. **Focus-Based Routing**: Efficient execution based on user needs
-6. **Forecast Capability**: New specialist provides forward-looking predictions ⭐
+1. **Agentic Architecture**: Planner Agent decides which agents to run, Reflection Nodes evaluate output
+2. **Dynamic Execution**: Execution adapts based on LLM decisions, not fixed flow
+3. **Self-Reflection**: Each agent's output is evaluated and execution adapts accordingly
+4. **4 Specialist Agents**: Each uses LLM for intelligent, context-aware analysis
+5. **Real Data Sources**: Yahoo Finance + SEC EDGAR prevent hallucination
+6. **Automatic Quality**: Evaluator-optimizer ensures high-quality output
+7. **Adaptive Routing**: System adapts based on reflection decisions
 
 ---
 
-**Last Updated**: Added ForecastSpecialistAgent and updated architecture to reflect comprehensive workflow pattern.
+**Last Updated**: Implemented agentic architecture with Planner Agent and Reflection Nodes for dynamic, adaptive execution.

@@ -1,15 +1,17 @@
 # Multi-Agent Financial Analysis System
 ## AAI-520 Group 3 Final Project
 
-This project implements a sophisticated **Multi-Agent Financial Analysis System** using LangChain and LangGraph for autonomous investment research and analysis.
+This project implements a sophisticated **Agentic Multi-Agent Financial Analysis System** using LangChain and LangGraph for autonomous investment research and analysis.
 
 **Project Status**: ✅ **Completed**
 
 ## 🎯 Project Overview
 
-This system demonstrates advanced AI agent architecture with:
-- **Autonomous Agent Functions**: Planning, tool usage, self-reflection, and learning
-- **Multi-Agent Workflow Patterns**: Prompt chaining, routing, and evaluator-optimizer
+This system demonstrates advanced **agentic AI architecture** with:
+- **Planner Agent**: LLM-powered dynamic execution planning - decides which specialists to run
+- **Reflection Nodes**: Self-evaluation after each agent - adapts execution based on output quality
+- **Autonomous Agent Functions**: Planning, tool usage, self-reflection, and iterative learning
+- **Multi-Agent Workflow Patterns**: Prompt chaining, dynamic routing, and evaluator-optimizer
 - **Real-time Financial Analysis**: Stock price, company info, and news sentiment analysis
 
 ## 🏗️ Architecture
@@ -30,47 +32,70 @@ This system demonstrates advanced AI agent architecture with:
 - **Self-Reflection**: Quality assessment of outputs
 - **Learning**: Cross-run improvement and memory
 
-### Workflow Patterns (33.8%)
-1. **Prompt Chaining**: Integrated into NewsSpecialistAgent - Ingest News → Preprocess → Classify → Extract → Summarize
-2. **Comprehensive Workflow**: Coordinates all 4 specialist agents (news, earnings, market, forecast)
-3. **Evaluator-Optimizer**: Automatically evaluates and optimizes combined results using LLM feedback
+### Agentic Architecture (33.8%)
+1. **Planner Agent**: LLM decides which specialist agents to run based on user query and focus
+2. **Reflection Nodes**: After each agent, LLM evaluates output quality and decides next action:
+   - Continue to next agent
+   - Re-run current agent (if output incomplete)
+   - Call additional agent (to fill gaps)
+   - Gather more data (if information missing)
+3. **Dynamic Routing**: Execution adapts based on reflection decisions, not fixed flow
+4. **Prompt Chaining**: Integrated into NewsSpecialistAgent - Ingest News → Preprocess → Classify → Extract → Summarize
+5. **Evaluator-Optimizer**: Automatically evaluates and optimizes combined results using LLM feedback
 
-### Multi-Agent System Flow
+### Agentic Multi-Agent System Flow
 
 ```
 USER REQUEST: "Analyze AAPL" (or "AAPL comprehensive")
 
-LANGGRAPH ORCHESTRATOR:
-├── ROUTES to comprehensive workflow
-└── COORDINATES all specialist agents
+LANGGRAPH ORCHESTRATOR (Agentic):
+├── START: Initialize state
+├── PLANNER AGENT: LLM decides which specialists to run
+│   └── Creates execution plan based on symbol, focus, and query
+│
+└── DYNAMIC EXECUTION (Planner-Driven):
+    ├── ROUTE: Routes to first agent in plan
+    │
+    ├── NewsSpecialistAgent (if in plan)
+    │   ├── STEP 1: Ingest news from Yahoo Finance
+    │   ├── STEP 2: Preprocess with LLM
+    │   ├── STEP 3: Classify sentiment with LLM
+    │   ├── STEP 4: Extract entities with LLM
+    │   └── STEP 5: Summarize with LLM
+    │   └── → REFLECTION: Evaluate output quality
+    │
+    ├── EarningsSpecialistAgent (if in plan)
+    │   ├── Fetches: Company info, financial metrics from Yahoo Finance
+    │   ├── Fetches: SEC filings (10-K, 10-Q) from EDGAR API
+    │   └── LLM Analysis: Valuation assessment and financial health
+    │   └── → REFLECTION: Evaluate output quality
+    │
+    ├── MarketSpecialistAgent (if in plan)
+    │   ├── Fetches: Current price, volume, trends
+    │   └── LLM Analysis: Market momentum and technical insights
+    │   └── → REFLECTION: Evaluate output quality
+    │
+    └── ForecastSpecialistAgent (if in plan)
+        ├── Fetches: Historical prices (6 months)
+        ├── Calculates: Trend, volatility, statistics
+        └── LLM Analysis: 1-month price forecast with reasoning
+        └── → REFLECTION: Evaluate output quality
 
-COMPREHENSIVE WORKFLOW:
-├── NewsSpecialistAgent (with Prompt Chaining)
-│   ├── STEP 1: Ingest news from Yahoo Finance
-│   ├── STEP 2: Preprocess with LLM
-│   ├── STEP 3: Classify sentiment with LLM
-│   ├── STEP 4: Extract entities with LLM
-│   └── STEP 5: Summarize with LLM
-│
-├── EarningsSpecialistAgent
-│   ├── Fetches: Company info, financial metrics from Yahoo Finance
-│   ├── Fetches: SEC filings (10-K, 10-Q) from EDGAR API
-│   └── LLM Analysis: Valuation assessment and financial health
-│
-├── MarketSpecialistAgent
-│   ├── Fetches: Current price, volume, trends
-│   └── LLM Analysis: Market momentum and technical insights
-│
-└── ForecastSpecialistAgent (NEW!)
-    ├── Fetches: Historical prices (6 months)
-    ├── Calculates: Trend, volatility, statistics
-    └── LLM Analysis: 1-month price forecast with reasoning
+REFLECTION DECISIONS:
+├── Continue: Output is good, proceed to next agent
+├── Re-run: Output incomplete, re-run current agent
+├── Call Agent: Need additional agent to fill gaps
+└── Gather Data: Need more information before proceeding
+
+COMBINE RESULTS:
+├── Collects results from all executed agents
+└── Prepares for final evaluation
 
 EVALUATOR-OPTIMIZER (Automatic):
 ├── Evaluates combined analysis quality
 ├── Identifies weaknesses
 ├── Gathers additional data if needed
-└── Refines analysis iteratively
+└── Refines analysis iteratively (up to 3 iterations)
 
 FINAL OUTPUT:
 ├── Comprehensive financial overview
@@ -81,11 +106,13 @@ FINAL OUTPUT:
 ```
 
 ### Key Distinctions
+- **🧠 PLANNER AGENT**: LLM decides which specialists to run based on user query - not fixed flow
+- **🪞 REFLECTION NODES**: After each agent, LLM evaluates output and adapts execution dynamically
 - **📊 DATA SOURCES**: Real APIs that fetch current financial data (Yahoo Finance, SEC EDGAR)
 - **🤖 SPECIALIST AGENTS**: LLM-powered analyzers that interpret data and provide insights
 - **🧠 LLM INTELLIGENCE**: Each agent uses LLMs for context-aware analysis, not just rule-based logic
-- **🔄 WORKFLOWS**: LangGraph orchestration coordinates specialists and manages state
-- **✨ AUTONOMOUS FEATURES**: Planning (LLM routing), tool usage (API calls), reflection (evaluator), learning (iterative optimization)
+- **🔄 AGENTIC WORKFLOWS**: LangGraph orchestration with dynamic planning and reflection
+- **✨ AUTONOMOUS FEATURES**: Planning (planner agent), tool usage (API calls), reflection (reflection nodes), learning (iterative optimization)
 
 ## 🚀 Quick Start
 
@@ -121,7 +148,8 @@ jupyter notebook demo_notebook.ipynb
 
 The system provides:
 - **Interactive mode** for testing individual components
-- **Comprehensive analysis** using all workflows
+- **Agentic analysis** with planner-driven execution and reflection
+- **Dynamic adaptation** based on output quality evaluation
 - **Learning capabilities** that improve over time
 
 ## 📊 Demo Results
@@ -155,10 +183,12 @@ Multi-Agent-Financial-Analysis-System/
 │       ├── market_agent.py      # MarketSpecialistAgent (technical analysis)
 │       └── forecast_agent.py   # ForecastSpecialistAgent (price forecasting)
 ├── workflows/
-│   ├── langgraph_orchestration.py  # LangGraph workflow orchestrator
-│   ├── prompt_chaining.py       # Integrated into news_agent
-│   ├── routing.py               # LLM-based specialist selection
-│   └── evaluator_optimizer.py   # Quality evaluation & iterative optimization
+│   ├── langgraph_orchestration.py  # LangGraph agentic workflow orchestrator
+│   ├── planner_agent.py          # Planner Agent (LLM decides which agents to run)
+│   ├── reflection_node.py        # Reflection Node (evaluates agent outputs)
+│   ├── prompt_chaining.py        # Integrated into news_agent
+│   ├── routing.py                # LLM-based specialist selection (legacy)
+│   └── evaluator_optimizer.py    # Quality evaluation & iterative optimization
 ├── tools/
 │   └── data_sources.py          # Yahoo Finance & SEC EDGAR API integration
 ├── financial-analysis-ui/       # React.js frontend (optional)
@@ -178,11 +208,11 @@ Multi-Agent-Financial-Analysis-System/
 python main.py
 
 # Interactive mode:
-> AAPL                    # Comprehensive analysis (all 4 specialists)
-> AAPL news               # News analysis only
-> AAPL earnings           # Earnings analysis only
-> AAPL market             # Market/technical analysis only
-> AAPL forecast           # Forecast analysis only
+> AAPL                    # Planner decides which agents to run
+> AAPL news               # Planner focuses on news analysis
+> AAPL earnings           # Planner focuses on earnings analysis
+> AAPL market             # Planner focuses on market analysis
+> AAPL forecast           # Planner focuses on forecast analysis
 ```
 
 ### Python API
@@ -191,11 +221,11 @@ from workflows.langgraph_orchestration import LangGraphOrchestrator
 
 orchestrator = LangGraphOrchestrator()
 
-# Comprehensive analysis (all specialists)
-result = orchestrator.run(symbol="AAPL", focus="comprehensive")
+# Agentic analysis (planner decides which agents to run)
+result = orchestrator.run(symbol="AAPL", focus="comprehensive", workflow_type="agentic")
 
-# Focused analysis
-result = orchestrator.run(symbol="AAPL", focus="forecast")
+# Focused analysis (planner focuses on specific area)
+result = orchestrator.run(symbol="AAPL", focus="forecast", workflow_type="agentic")
 ```
 
 ### REST API
@@ -203,10 +233,10 @@ result = orchestrator.run(symbol="AAPL", focus="forecast")
 # Start FastAPI server
 uvicorn api:app --reload
 
-# Analyze stock
+# Analyze stock (agentic workflow)
 curl -X POST "http://localhost:8000/api/analyze" \
   -H "Content-Type: application/json" \
-  -d '{"symbol": "AAPL", "focus": "comprehensive"}'
+  -d '{"symbol": "AAPL", "focus": "comprehensive", "workflow_type": "agentic"}'
 ```
 
 ### Specialist Agents (Direct Usage)
@@ -235,12 +265,13 @@ forecast_result = forecast_agent.analyze("AAPL")
 - ✅ **Self-Reflection**: Quality assessment of own outputs
 - ✅ **Learning System**: Continuous improvement from past analyses
 
-### Multi-Agent Workflows
-- ✅ **LangGraph Orchestration**: Stateful workflow management with conditional routing
+### Agentic Multi-Agent Workflows
+- ✅ **Planner Agent**: LLM-powered dynamic execution planning - decides which agents to run
+- ✅ **Reflection Nodes**: Self-evaluation after each agent - adapts execution based on quality
+- ✅ **Dynamic Routing**: Execution adapts based on reflection decisions, not fixed flow
+- ✅ **LangGraph Orchestration**: Stateful workflow management with agentic planning and reflection
 - ✅ **Prompt Chaining**: Integrated LLM-powered news analysis pipeline
-- ✅ **LLM-based Routing**: Intelligent specialist selection based on focus
 - ✅ **Evaluator-Optimizer**: Automatic quality evaluation and iterative refinement
-- ✅ **Comprehensive Workflow**: Coordinates all 4 specialist agents seamlessly
 
 ### Real-time Analysis
 - ✅ **Stock Price Data**: Current prices, changes, volume from Yahoo Finance

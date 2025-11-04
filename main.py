@@ -3,7 +3,8 @@
 Multi-Agent Financial Analysis System
 AAI-520 Group 3 Final Project
 
-Single entry point through LangGraph orchestration.
+Agentic multi-agent system with LLM-powered planning, reflection, and iterative refinement.
+Uses LangGraph for dynamic workflow orchestration.
 """
 
 import sys
@@ -33,15 +34,24 @@ class MultiAgentFinancialAnalysisSystem:
         self.orchestrator = LangGraphOrchestrator()
         
         print("Multi-Agent Financial Analysis System initialized")
-        print("LangGraph orchestration enabled")
+        print("Agentic architecture enabled:")
+        print("  • Planner Agent: LLM decides which agents to run")
+        print("  • Reflection Nodes: Agents evaluate their own work")
+        print("  • Dynamic Routing: System adapts based on results")
+        print("  • Iterative Refinement: Continues until quality threshold")
     
     def analyze(self, symbol: str, focus: str = "comprehensive") -> Dict[str, Any]:
         """
         Single entry point for financial analysis.
         
+        Uses agentic architecture:
+        - Planner Agent decides which specialist agents to run
+        - Reflection Nodes evaluate output quality after each agent
+        - System adapts dynamically based on results
+        
         Args:
             symbol: Stock symbol to analyze
-            focus: Analysis focus (comprehensive, news, earnings, technical, market, forecast)
+            focus: Analysis focus (comprehensive, news, earnings, market, forecast)
         
         Returns:
             Analysis results dictionary
@@ -55,7 +65,7 @@ class MultiAgentFinancialAnalysisSystem:
             result = self.orchestrator.run(
                 symbol=symbol,
                 focus=focus,
-                workflow_type="comprehensive"
+                workflow_type="agentic"  # Agentic workflow with planner and reflection
             )
             
             if result.get("status") == "success":
@@ -79,15 +89,20 @@ class MultiAgentFinancialAnalysisSystem:
         print("AAI-520 Group 3 Final Project")
         print("=" * 60)
         print("\nAvailable commands:")
-        print("  '<symbol>' - Analyze symbol (all specialists)")
+        print("  '<symbol>' - Analyze symbol (Planner decides which agents to run)")
         print("  '<symbol> <focus>' - Analyze with specific focus")
-        print("    Focus: news, earnings, technical, market, forecast, comprehensive")
+        print("    Focus: news, earnings, market, forecast, comprehensive")
         print("  'help' - Show this help message")
         print("  'quit' or 'exit' - Exit")
         print("\nExamples:")
-        print("  AAPL                    # All specialists")
-        print("  AAPL news               # All specialists, emphasis on news")
-        print("  TSLA earnings           # All specialists, emphasis on earnings")
+        print("  AAPL                    # Planner decides which agents to run")
+        print("  AAPL news               # Planner focuses on news analysis")
+        print("  TSLA earnings           # Planner focuses on earnings analysis")
+        print("\nNote: The system uses agentic planning and reflection:")
+        print("  • Planner Agent intelligently decides which specialists to run")
+        print("  • After each agent, Reflection Node evaluates output quality")
+        print("  • System can adapt: re-run agents, call additional agents, gather more data")
+        print("  • Evaluation loop continues until quality threshold is met")
         print("=" * 60)
         
         while True:
@@ -103,15 +118,17 @@ class MultiAgentFinancialAnalysisSystem:
                 
                 if user_input.lower() == 'help':
                     print("\nCommands:")
-                    print("  <symbol> - Analyze with all specialists")
-                    print("  <symbol> <focus> - Analyze with focus (news, earnings, technical, market, forecast)")
+                    print("  <symbol> - Analyze (Planner decides which agents to run)")
+                    print("  <symbol> <focus> - Analyze with focus (news, earnings, market, forecast)")
+                    print("\nThe system uses agentic planning - the Planner Agent decides")
+                    print("which specialist agents to run based on your query and focus.")
                     continue
                 
                 # Parse command
                 parts = user_input.split()
                 
                 if len(parts) == 1:
-                    # Just symbol - use all specialists
+                    # Just symbol - Planner decides which agents to run
                     symbol = parts[0].upper()
                     self.analyze(symbol)
                 
@@ -121,7 +138,7 @@ class MultiAgentFinancialAnalysisSystem:
                     focus = parts[1].lower()
                     
                     # Validate focus
-                    valid_focuses = ['news', 'earnings', 'technical', 'market', 'forecast', 'comprehensive']
+                    valid_focuses = ['news', 'earnings', 'market', 'forecast', 'comprehensive']
                     if focus not in valid_focuses:
                         print(f"Invalid focus: {focus}")
                         print(f"Valid options: {', '.join(valid_focuses)}")

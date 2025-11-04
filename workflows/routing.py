@@ -34,8 +34,13 @@ class RoutingWorkflow:
         self.earnings_specialist = EarningsSpecialistAgent()
         self.market_specialist = MarketSpecialistAgent()
     
-    def route_research_request(self, symbol: str, focus: str = "comprehensive") -> List[SpecialistType]:
-        """Route a research request to appropriate specialists."""
+    def route_research_request(self, focus: str = "comprehensive") -> List[SpecialistType]:
+        """
+        Route a research request to appropriate specialists.
+        
+        Note: This is legacy code - the system now uses Planner Agent for routing decisions.
+        The symbol parameter was removed as it was not used in routing logic.
+        """
         focus_lower = focus.lower()
         
         if focus_lower == "news":

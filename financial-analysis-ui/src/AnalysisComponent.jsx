@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:800
 
 function AnalysisComponent() {
   const [symbol, setSymbol] = useState('AAPL');
-  const [workflowType, setWorkflowType] = useState('comprehensive');
+  const [workflowType, setWorkflowType] = useState('agentic');
   const [focus, setFocus] = useState('comprehensive');
   const [workflows, setWorkflows] = useState([]);
   const [focusTypes, setFocusTypes] = useState([]);
