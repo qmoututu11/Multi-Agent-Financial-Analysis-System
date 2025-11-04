@@ -15,10 +15,14 @@ This system demonstrates advanced AI agent architecture with:
 ## 🏗️ Architecture
 
 ### System Components
-- **5 Tools**: Simple data fetchers and analyzers
-- **4 Agents**: Intelligent decision-makers that use the tools
-  - **1 Main Agent**: InvestmentResearchAgent (orchestrates everything and learns)
-  - **3 Specialist Agents**: NewsSpecialistAgent, EarningsSpecialistAgent, MarketSpecialistAgent (in agents/specialist_agents/)
+- **Data Sources**: Real-time financial data APIs
+  - Yahoo Finance API: Stock prices, company info, news
+  - SEC EDGAR API: Official regulatory filings (10-K, 10-Q, 8-K)
+- **4 Specialist Agents**: LLM-powered intelligent analyzers
+  - **NewsSpecialistAgent**: News sentiment analysis with prompt chaining
+  - **EarningsSpecialistAgent**: Financial analysis and valuation
+  - **MarketSpecialistAgent**: Technical analysis and market trends
+  - **ForecastSpecialistAgent**: Historical trend analysis and price forecasting
 
 ### Agent Functions (33.8%)
 - **Planning**: Autonomous research step planning
@@ -27,39 +31,61 @@ This system demonstrates advanced AI agent architecture with:
 - **Learning**: Cross-run improvement and memory
 
 ### Workflow Patterns (33.8%)
-1. **Prompt Chaining**: Ingest News → Preprocess → Classify → Extract → Summarize
-2. **Routing**: Direct content to specialist agents (earnings, news, market analyzers)
-3. **Evaluator-Optimizer**: Generate → Evaluate → Refine using feedback
+1. **Prompt Chaining**: Integrated into NewsSpecialistAgent - Ingest News → Preprocess → Classify → Extract → Summarize
+2. **Comprehensive Workflow**: Coordinates all 4 specialist agents (news, earnings, market, forecast)
+3. **Evaluator-Optimizer**: Automatically evaluates and optimizes combined results using LLM feedback
 
 ### Multi-Agent System Flow
 
 ```
-USER REQUEST: "Analyze AAPL"
+USER REQUEST: "Analyze AAPL" (or "AAPL comprehensive")
 
-MAIN AGENT (InvestmentResearchAgent):
-├── PLANNING: "I need comprehensive analysis"
-├── TOOL USAGE: Uses 5 tools (price, company, news, financial, technical)
-├── SELF-REFLECTION: "My analysis was good but could improve"
-└── LEARNING: "I'll remember this approach worked well"
+LANGGRAPH ORCHESTRATOR:
+├── ROUTES to comprehensive workflow
+└── COORDINATES all specialist agents
 
-ROUTING WORKFLOW:
-├── ROUTES to: NewsSpecialist + EarningsSpecialist + MarketSpecialist
-├── Each specialist uses their preferred tools
-└── COMBINES results into comprehensive analysis
+COMPREHENSIVE WORKFLOW:
+├── NewsSpecialistAgent (with Prompt Chaining)
+│   ├── STEP 1: Ingest news from Yahoo Finance
+│   ├── STEP 2: Preprocess with LLM
+│   ├── STEP 3: Classify sentiment with LLM
+│   ├── STEP 4: Extract entities with LLM
+│   └── STEP 5: Summarize with LLM
+│
+├── EarningsSpecialistAgent
+│   ├── Fetches: Company info, financial metrics from Yahoo Finance
+│   ├── Fetches: SEC filings (10-K, 10-Q) from EDGAR API
+│   └── LLM Analysis: Valuation assessment and financial health
+│
+├── MarketSpecialistAgent
+│   ├── Fetches: Current price, volume, trends
+│   └── LLM Analysis: Market momentum and technical insights
+│
+└── ForecastSpecialistAgent (NEW!)
+    ├── Fetches: Historical prices (6 months)
+    ├── Calculates: Trend, volatility, statistics
+    └── LLM Analysis: 1-month price forecast with reasoning
 
-PROMPT CHAINING WORKFLOW:
-├── STEP 1: Ingest news (NewsAnalysisTool)
-├── STEP 2: Preprocess text (TextPreprocessor)
-├── STEP 3: Classify sentiment (SentimentClassifier)
-├── STEP 4: Extract entities (EntityExtractor)
-└── STEP 5: Summarize (TextSummarizer)
+EVALUATOR-OPTIMIZER (Automatic):
+├── Evaluates combined analysis quality
+├── Identifies weaknesses
+├── Gathers additional data if needed
+└── Refines analysis iteratively
+
+FINAL OUTPUT:
+├── Comprehensive financial overview
+├── Market analysis
+├── News sentiment summary
+├── Financial forecast
+└── Investment recommendations
 ```
 
 ### Key Distinctions
-- **🛠️ TOOLS**: Simple functions that perform specific tasks (StockPriceTool, CompanyInfoTool, etc.)
-- **🤖 AGENTS**: Intelligent entities that can think, plan, and use tools
-- **🧠 AGENTIC FUNCTIONS**: What makes agents intelligent (planning, tool usage, reflection, learning)
-- **🔄 WORKFLOWS**: How agents coordinate and process information
+- **📊 DATA SOURCES**: Real APIs that fetch current financial data (Yahoo Finance, SEC EDGAR)
+- **🤖 SPECIALIST AGENTS**: LLM-powered analyzers that interpret data and provide insights
+- **🧠 LLM INTELLIGENCE**: Each agent uses LLMs for context-aware analysis, not just rule-based logic
+- **🔄 WORKFLOWS**: LangGraph orchestration coordinates specialists and manages state
+- **✨ AUTONOMOUS FEATURES**: Planning (LLM routing), tool usage (API calls), reflection (evaluator), learning (iterative optimization)
 
 ## 🚀 Quick Start
 
@@ -109,69 +135,96 @@ The system provides comprehensive analysis including:
 
 ## 🛠️ Technologies
 
-- **LangChain**: Agent framework and tool integration
+- **LangChain**: Agent framework and LLM integration
 - **LangGraph**: Workflow orchestration and state management
-- **OpenAI GPT**: Large language model for analysis
-- **Yahoo Finance API**: Real-time financial data
+- **OpenAI GPT**: Large language model for intelligent analysis
+- **Yahoo Finance API**: Real-time stock prices, company info, news
+- **SEC EDGAR API**: Official regulatory filings and financial documents
+- **FastAPI**: REST API backend
+- **React.js**: Frontend UI (optional)
 - **Python**: Core implementation language
 
 ## 📁 Project Structure
 
 ```
-aai-520-group-3-final-project/
+Multi-Agent-Financial-Analysis-System/
 ├── agents/
-│   ├── investment_agent.py      # Main autonomous agent (InvestmentResearchAgent)
-│   └── specialist_agents/       # Specialist agents for specific analysis types
-│       ├── news_agent.py        # NewsSpecialistAgent
-│       ├── earnings_agent.py    # EarningsSpecialistAgent
-│       └── market_agent.py      # MarketSpecialistAgent
+│   └── specialist_agents/       # LLM-powered specialist agents
+│       ├── news_agent.py        # NewsSpecialistAgent (with prompt chaining)
+│       ├── earnings_agent.py    # EarningsSpecialistAgent (with SEC filings)
+│       ├── market_agent.py      # MarketSpecialistAgent (technical analysis)
+│       └── forecast_agent.py   # ForecastSpecialistAgent (price forecasting)
 ├── workflows/
-│   ├── prompt_chaining.py       # News analysis pipeline
-│   ├── routing.py               # Routing workflow (coordinates specialist agents)
-│   └── evaluator_optimizer.py   # Quality evaluation & refinement
+│   ├── langgraph_orchestration.py  # LangGraph workflow orchestrator
+│   ├── prompt_chaining.py       # Integrated into news_agent
+│   ├── routing.py               # LLM-based specialist selection
+│   └── evaluator_optimizer.py   # Quality evaluation & iterative optimization
 ├── tools/
-│   ├── data_sources.py          # Yahoo Finance API integration
-│   └── langchain_tools.py       # 5 LangChain tools (Stock, Company, News, Financial, Technical)
+│   └── data_sources.py          # Yahoo Finance & SEC EDGAR API integration
+├── financial-analysis-ui/       # React.js frontend (optional)
+│   └── src/
+│       └── AnalysisComponent.jsx
 ├── config.py                    # Configuration management
-├── main.py                      # Main entry point (interactive mode)
-├── demo_notebook.ipynb          # Jupyter notebook demo
+├── main.py                      # CLI entry point
+├── api.py                       # FastAPI REST endpoint
 ├── .env                         # API keys
 └── requirements.txt             # Dependencies
 ```
 
 ## 🎮 Usage Examples
 
-### Agent Functions Demo
-```python
-from agents.investment_agent import InvestmentResearchAgent
+### Command Line Interface
+```bash
+python main.py
 
-agent = InvestmentResearchAgent()
-result = agent.research_stock("AAPL", "comprehensive")
+# Interactive mode:
+> AAPL                    # Comprehensive analysis (all 4 specialists)
+> AAPL news               # News analysis only
+> AAPL earnings           # Earnings analysis only
+> AAPL market             # Market/technical analysis only
+> AAPL forecast           # Forecast analysis only
 ```
 
-### Workflow Patterns Demo
+### Python API
 ```python
-from workflows.prompt_chaining import PromptChainingWorkflow
-from workflows.routing import RoutingWorkflow
-from workflows.evaluator_optimizer import EvaluatorOptimizerWorkflow
-from agents.specialist_agents import NewsSpecialistAgent, EarningsSpecialistAgent, MarketSpecialistAgent
+from workflows.langgraph_orchestration import LangGraphOrchestrator
 
-# Prompt chaining
-pc_workflow = PromptChainingWorkflow()
-result = pc_workflow.execute_workflow("AAPL", 5)
+orchestrator = LangGraphOrchestrator()
 
-# Routing workflow (coordinates specialist agents)
-routing_workflow = RoutingWorkflow()
-specialists = routing_workflow.route_research_request("AAPL", "comprehensive")
-result = routing_workflow.execute_specialist_analysis("AAPL", specialists)
+# Comprehensive analysis (all specialists)
+result = orchestrator.run(symbol="AAPL", focus="comprehensive")
 
-# Direct specialist agent usage
-news_agent = NewsSpecialistAgent()
+# Focused analysis
+result = orchestrator.run(symbol="AAPL", focus="forecast")
+```
+
+### REST API
+```bash
+# Start FastAPI server
+uvicorn api:app --reload
+
+# Analyze stock
+curl -X POST "http://localhost:8000/api/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{"symbol": "AAPL", "focus": "comprehensive"}'
+```
+
+### Specialist Agents (Direct Usage)
+```python
+from agents.specialist_agents import (
+    NewsSpecialistAgent, 
+    EarningsSpecialistAgent, 
+    MarketSpecialistAgent,
+    ForecastSpecialistAgent
+)
+
+# News analysis with prompt chaining
+news_agent = NewsSpecialistAgent(use_prompt_chaining=True)
 news_result = news_agent.analyze("AAPL")
 
-# Evaluator-optimizer
-eo_workflow = EvaluatorOptimizerWorkflow()
-result = eo_workflow.execute_workflow("AAPL", "comprehensive", 3)
+# Financial forecast
+forecast_agent = ForecastSpecialistAgent()
+forecast_result = forecast_agent.analyze("AAPL")
 ```
 
 ## 🔍 Key Features
@@ -183,15 +236,20 @@ result = eo_workflow.execute_workflow("AAPL", "comprehensive", 3)
 - ✅ **Learning System**: Continuous improvement from past analyses
 
 ### Multi-Agent Workflows
-- ✅ **Prompt Chaining**: Sequential news processing pipeline
-- ✅ **Routing**: Intelligent specialist agent coordination
-- ✅ **Evaluator-Optimizer**: Quality-driven iterative improvement
+- ✅ **LangGraph Orchestration**: Stateful workflow management with conditional routing
+- ✅ **Prompt Chaining**: Integrated LLM-powered news analysis pipeline
+- ✅ **LLM-based Routing**: Intelligent specialist selection based on focus
+- ✅ **Evaluator-Optimizer**: Automatic quality evaluation and iterative refinement
+- ✅ **Comprehensive Workflow**: Coordinates all 4 specialist agents seamlessly
 
 ### Real-time Analysis
-- ✅ **Stock Price Data**: Current prices, changes, volume
-- ✅ **Company Information**: Fundamentals, sector, industry
-- ✅ **News Analysis**: Sentiment analysis and trend identification
-- ✅ **Investment Recommendations**: Data-driven buy/sell/hold suggestions
+- ✅ **Stock Price Data**: Current prices, changes, volume from Yahoo Finance
+- ✅ **Company Information**: Fundamentals, sector, industry, P/E ratios
+- ✅ **SEC Filings**: Official 10-K, 10-Q, 8-K filings from EDGAR API
+- ✅ **News Analysis**: LLM-powered sentiment analysis with prompt chaining
+- ✅ **Market Trends**: Technical analysis and momentum indicators
+- ✅ **Price Forecasting**: Historical trend analysis and 1-month forecasts
+- ✅ **Investment Recommendations**: Data-driven buy/sell/hold suggestions with reasoning
 
 ## 📈 Performance Metrics
 

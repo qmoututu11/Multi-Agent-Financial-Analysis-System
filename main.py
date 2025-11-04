@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Multi-Agent Financial Analysis System - Interactive Demo
+Multi-Agent Financial Analysis System
 AAI-520 Group 3 Final Project
+
+Single entry point through LangGraph orchestration.
 """
 
 import sys
@@ -11,15 +13,12 @@ from typing import Dict, Any
 # Add current directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from agents.investment_agent import InvestmentResearchAgent
-from workflows.prompt_chaining import PromptChainingWorkflow
-from workflows.routing import RoutingWorkflow
-from workflows.evaluator_optimizer import EvaluatorOptimizerWorkflow
 from workflows.langgraph_orchestration import LangGraphOrchestrator
 from config import Config
 
+
 class MultiAgentFinancialAnalysisSystem:
-    """Multi-Agent Financial Analysis System for Interactive Demo."""
+    """Multi-Agent Financial Analysis System - Single Entry Point."""
     
     def __init__(self):
         """Initialize the multi-agent system."""
@@ -28,258 +27,133 @@ class MultiAgentFinancialAnalysisSystem:
             print("Configuration validated successfully")
         except ValueError as e:
             print(f"Configuration error: {e}")
-            return
+            raise
         
-        # Initialize components
-        self.agent = InvestmentResearchAgent()
-        self.prompt_chaining_workflow = PromptChainingWorkflow()
-        self.routing_workflow = RoutingWorkflow()
-        self.evaluator_optimizer_workflow = EvaluatorOptimizerWorkflow()
-        
-        # Initialize LangGraph orchestrator
-        self.langgraph_orchestrator = LangGraphOrchestrator()
+        # Initialize LangGraph orchestrator (single entry point)
+        self.orchestrator = LangGraphOrchestrator()
         
         print("Multi-Agent Financial Analysis System initialized")
         print("LangGraph orchestration enabled")
     
-    def analyze_agent_functions(self, symbol: str) -> Dict[str, Any]:
-        """Analyze using autonomous agent functions."""
-        print(f"\nAnalyzing {symbol} with Autonomous Agent Functions")
+    def analyze(self, symbol: str, focus: str = "comprehensive") -> Dict[str, Any]:
+        """
+        Single entry point for financial analysis.
+        
+        Args:
+            symbol: Stock symbol to analyze
+            focus: Analysis focus (comprehensive, news, earnings, technical, market, forecast)
+        
+        Returns:
+            Analysis results dictionary
+        """
+        print(f"\nAnalyzing {symbol}")
+        if focus != "comprehensive":
+            print(f"Focus: {focus}")
         print("=" * 50)
         
         try:
-            result = self.agent.research_stock(symbol, "comprehensive")
+            result = self.orchestrator.run(
+                symbol=symbol,
+                focus=focus,
+                workflow_type="comprehensive"
+            )
             
-            if result["status"] == "success":
-                print("Agent Analysis Completed Successfully!")
-                print(f"Plan: {result['plan'][:100]}...")
-                print(f"Analysis: {result['analysis'][:200]}...")
-                print(f"Reflection: {result['reflection']['reflection'][:100]}...")
+            if result.get("status") == "success":
+                # Summary already shown in comprehensive analysis
                 return result
             else:
-                print(f"Error: {result.get('error', 'Unknown error')}")
+                error_msg = result.get('error', 'Unknown error')
+                print(f" Error: {error_msg}")
                 return result
                 
         except Exception as e:
-            print(f"Analysis error: {str(e)}")
-            return {"status": "error", "error": str(e)}
-    
-    def analyze_prompt_chaining(self, symbol: str) -> Dict[str, Any]:
-        """Analyze using prompt chaining workflow."""
-        print(f"\nAnalyzing {symbol} with Prompt Chaining Workflow")
-        print("=" * 50)
-        
-        try:
-            result = self.prompt_chaining_workflow.execute_workflow(symbol, 5)
-            
-            if result["status"] == "success":
-                print("Prompt Chaining Analysis Completed Successfully!")
-                results = result["results"]
-                print(f"Articles Processed: {results['articles_processed']}")
-                print(f"Overall Sentiment: {results['sentiment_distribution']['overall_sentiment']}")
-                print(f"Key Entities: {list(results['key_entities'].keys())}")
-                return result
-            else:
-                print(f"Error: {result.get('error', 'Unknown error')}")
-                return result
-                
-        except Exception as e:
-            print(f"Analysis error: {str(e)}")
-            return {"status": "error", "error": str(e)}
-    
-    def analyze_routing(self, symbol: str) -> Dict[str, Any]:
-        """Analyze using routing workflow."""
-        print(f"\nAnalyzing {symbol} with Routing Workflow")
-        print("=" * 50)
-        
-        try:
-            specialists = self.routing_workflow.route_research_request(symbol, "comprehensive")
-            result = self.routing_workflow.execute_specialist_analysis(symbol, specialists)
-            
-            if result["status"] == "success":
-                print("Routing Workflow Analysis Completed Successfully!")
-                print(f"Specialists Used: {', '.join(result['specialists_used'])}")
-                print(f"Combined Summary:\n{result['combined_summary'][:300]}...")
-                return result
-            else:
-                print(f"Error: {result.get('error', 'Unknown error')}")
-                return result
-                
-        except Exception as e:
-            print(f"Analysis error: {str(e)}")
-            return {"status": "error", "error": str(e)}
-    
-    def analyze_evaluator_optimizer(self, symbol: str) -> Dict[str, Any]:
-        """Analyze using evaluator-optimizer workflow."""
-        print(f"\nAnalyzing {symbol} with Evaluator-Optimizer Workflow")
-        print("=" * 50)
-        
-        try:
-            result = self.evaluator_optimizer_workflow.execute_workflow(symbol, "comprehensive", 2)
-            
-            if result["status"] == "success":
-                print("Evaluator-Optimizer Analysis Completed Successfully!")
-                print(f"Initial Quality: {result['initial_evaluation']['overall_score']:.2f}")
-                print(f"Final Quality: {result['final_evaluation']['overall_score']:.2f}")
-                print(f"Iterations: {result['iterations_completed']}")
-                print(f"Final Analysis: {result['final_analysis'][:200]}...")
-                return result
-            else:
-                print(f"Error: {result.get('error', 'Unknown error')}")
-                return result
-                
-        except Exception as e:
-            print(f"Analysis error: {str(e)}")
-            return {"status": "error", "error": str(e)}
-    
-    def analyze_langgraph(self, symbol: str, workflow_type: str = "comprehensive", focus: str = "comprehensive") -> Dict[str, Any]:
-        """Analyze using LangGraph orchestration."""
-        print(f"\nAnalyzing {symbol} with LangGraph Orchestration ({workflow_type})")
-        print("=" * 50)
-        
-        try:
-            result = self.langgraph_orchestrator.run(symbol, focus=focus, workflow_type=workflow_type)
-            
-            if result["status"] == "success":
-                print("\n✅ LangGraph Orchestration Completed Successfully!")
-                combined_result = result.get("result", {})
-                
-                if combined_result:
-                    print(f"\nWorkflow Type: {combined_result.get('workflow_type', 'unknown')}")
-                    print(f"Status: {combined_result.get('status', 'unknown')}")
-                    
-                    nodes_executed = combined_result.get('nodes_executed', [])
-                    print(f"Nodes Executed: {len(nodes_executed)}")
-                    print(f"Execution Path: {' → '.join(nodes_executed)}")
-                    
-                    if combined_result.get('summary'):
-                        print(f"\nSummary:\n{combined_result['summary']}")
-                
-                return result
-            else:
-                print(f"Error: {result.get('error', 'Unknown error')}")
-                return result
-                
-        except Exception as e:
-            print(f"LangGraph orchestration error: {str(e)}")
+            print(f" Analysis error: {str(e)}")
             import traceback
             traceback.print_exc()
             return {"status": "error", "error": str(e)}
     
-    def run_comprehensive_analysis(self, symbol: str):
-        """Run comprehensive analysis using all workflows."""
-        print(f"\nCOMPREHENSIVE MULTI-AGENT ANALYSIS: {symbol}")
-        print("=" * 60)
-        
-        workflows = [
-            ("Agent Functions", self.analyze_agent_functions),
-            ("Prompt Chaining", self.analyze_prompt_chaining),
-            ("Routing Workflow", self.analyze_routing),
-            ("Evaluator-Optimizer", self.analyze_evaluator_optimizer)
-        ]
-        
-        results = {}
-        
-        for workflow_name, workflow_func in workflows:
-            try:
-                result = workflow_func(symbol)
-                results[workflow_name] = result["status"]
-                print(f"{workflow_name}: {'Success' if result['status'] == 'success' else 'Failed'}")
-            except Exception as e:
-                print(f"{workflow_name}: Error - {str(e)}")
-                results[workflow_name] = "error"
-        
-        # Summary
-        print(f"\nANALYSIS SUMMARY")
-        print("=" * 30)
-        for workflow_name, status in results.items():
-            print(f"{workflow_name}: {status}")
-        
-        success_count = sum(1 for status in results.values() if status == "success")
-        total_count = len(results)
-        print(f"\nSuccess Rate: {success_count}/{total_count} ({success_count/total_count*100:.1f}%)")
-        
-        return results
-    
-    def show_learning_summary(self):
-        """Show learning summary."""
-        print("\nLearning Summary:")
-        print(self.agent.get_learning_summary())
-    
     def interactive_analysis(self):
         """Interactive analysis mode."""
-        print("\nInteractive Multi-Agent Financial Analysis")
-        print("=" * 50)
-        print("Available commands:")
-        print("  'agent <symbol>' - Analyze with agent functions")
-        print("  'prompt <symbol>' - Analyze with prompt chaining")
-        print("  'routing <symbol>' - Analyze with routing workflow")
-        print("  'evaluator <symbol>' - Analyze with evaluator-optimizer")
-        print("  'langgraph <workflow_type> <symbol>' - Analyze with LangGraph orchestration")
-        print("     workflow_type: investment_agent, routing, prompt_chaining, evaluator_optimizer, comprehensive")
-        print("  'all <symbol>' - Run comprehensive analysis")
-        print("  'learning' - Show learning summary")
-        print("  'quit' - Exit")
+        print("\n" + "=" * 60)
+        print("Multi-Agent Financial Analysis System")
+        print("AAI-520 Group 3 Final Project")
+        print("=" * 60)
+        print("\nAvailable commands:")
+        print("  '<symbol>' - Analyze symbol (all specialists)")
+        print("  '<symbol> <focus>' - Analyze with specific focus")
+        print("    Focus: news, earnings, technical, market, forecast, comprehensive")
+        print("  'help' - Show this help message")
+        print("  'quit' or 'exit' - Exit")
+        print("\nExamples:")
+        print("  AAPL                    # All specialists")
+        print("  AAPL news               # All specialists, emphasis on news")
+        print("  TSLA earnings           # All specialists, emphasis on earnings")
+        print("=" * 60)
         
         while True:
             try:
-                user_input = input("\nEnter command: ").strip().lower()
+                user_input = input("\nEnter command: ").strip()
                 
-                if user_input == 'quit':
+                if not user_input:
+                    continue
+                
+                if user_input.lower() in ['quit', 'exit', 'q']:
                     print("Goodbye!")
                     break
-                elif user_input == 'learning':
-                    self.show_learning_summary()
-                elif user_input.startswith('agent '):
-                    symbol = user_input.split(' ', 1)[1].upper()
-                    self.analyze_agent_functions(symbol)
-                elif user_input.startswith('prompt '):
-                    symbol = user_input.split(' ', 1)[1].upper()
-                    self.analyze_prompt_chaining(symbol)
-                elif user_input.startswith('routing '):
-                    symbol = user_input.split(' ', 1)[1].upper()
-                    self.analyze_routing(symbol)
-                elif user_input.startswith('evaluator '):
-                    symbol = user_input.split(' ', 1)[1].upper()
-                    self.analyze_evaluator_optimizer(symbol)
-                elif user_input.startswith('langgraph '):
-                    parts = user_input.split(' ', 2)
-                    if len(parts) >= 3:
-                        workflow_type = parts[1]
-                        symbol = parts[2].upper()
-                        self.analyze_langgraph(symbol, workflow_type=workflow_type)
-                    elif len(parts) == 2:
-                        symbol = parts[1].upper()
-                        self.analyze_langgraph(symbol, workflow_type="comprehensive")
-                    else:
-                        print("Usage: langgraph <workflow_type> <symbol>")
-                elif user_input.startswith('all '):
-                    symbol = user_input.split(' ', 1)[1].upper()
-                    self.run_comprehensive_analysis(symbol)
+                
+                if user_input.lower() == 'help':
+                    print("\nCommands:")
+                    print("  <symbol> - Analyze with all specialists")
+                    print("  <symbol> <focus> - Analyze with focus (news, earnings, technical, market, forecast)")
+                    continue
+                
+                # Parse command
+                parts = user_input.split()
+                
+                if len(parts) == 1:
+                    # Just symbol - use all specialists
+                    symbol = parts[0].upper()
+                    self.analyze(symbol)
+                
+                elif len(parts) == 2:
+                    # Symbol + focus
+                    symbol = parts[0].upper()
+                    focus = parts[1].lower()
+                    
+                    # Validate focus
+                    valid_focuses = ['news', 'earnings', 'technical', 'market', 'forecast', 'comprehensive']
+                    if focus not in valid_focuses:
+                        print(f"Invalid focus: {focus}")
+                        print(f"Valid options: {', '.join(valid_focuses)}")
+                        continue
+                    
+                    self.analyze(symbol, focus=focus)
+                
                 else:
-                    print("Unknown command. Type 'quit' to exit.")
+                    print("Invalid command. Use: <symbol> [focus]")
+                    print("Examples: AAPL  or  AAPL news")
+                    print("Type 'help' for more information")
                     
             except KeyboardInterrupt:
-                print("\nGoodbye!")
+                print("\n\nGoodbye!")
                 break
             except Exception as e:
-                print(f"Error: {str(e)}")
+                print(f" Error: {str(e)}")
+                print("Type 'help' for usage examples")
+
 
 def main():
-    """Main function - entry point for the application."""
-    print("Multi-Agent Financial Analysis System")
-    print("AAI-520 Group 3 Final Project")
-    print("=" * 50)
-    
+    """Main function - single entry point."""
     try:
         system = MultiAgentFinancialAnalysisSystem()
-        
-        # For notebook compatibility, just start interactive mode
         system.interactive_analysis()
-            
+    except KeyboardInterrupt:
+        print("\n\nGoodbye!")
     except Exception as e:
-        print(f"System error: {str(e)}")
+        print(f" System error: {str(e)}")
         print("Please check your configuration and try again.")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

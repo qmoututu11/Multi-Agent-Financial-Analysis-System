@@ -1,5 +1,9 @@
 """
-Routing Workflow: Direct content to the right specialist (earnings, news, or market analyzers)
+Routing Workflow: Direct content to the right specialist agents.
+
+This workflow routes analysis requests to the appropriate specialist agents
+(news, earnings, or market) based on the focus parameter. It can execute
+multiple specialists in parallel for comprehensive analysis.
 """
 
 from typing import Dict, Any, List
@@ -9,15 +13,20 @@ from enum import Enum
 from agents.specialist_agents import NewsSpecialistAgent, EarningsSpecialistAgent, MarketSpecialistAgent
 
 class SpecialistType(Enum):
-    """Types of specialist agents."""
+    """Types of specialist agents available for routing."""
     NEWS = "news"
     EARNINGS = "earnings"
     MARKET = "market"
-    COMPREHENSIVE = "comprehensive"
 
 class RoutingWorkflow:
     """
-    Routing Workflow: Direct content to the right specialist
+    Routing Workflow for directing analysis requests to specialist agents.
+    
+    Routes requests based on focus parameter:
+    - "news" -> NewsSpecialistAgent
+    - "earnings" -> EarningsSpecialistAgent
+    - "market" or "technical" -> MarketSpecialistAgent
+    - "comprehensive" -> All specialists
     """
     
     def __init__(self):

@@ -55,12 +55,12 @@ class AnalysisRequest(BaseModel):
     symbol: str = Field(..., description="Stock symbol to analyze", example="AAPL")
     workflow_type: str = Field(
         default="comprehensive",
-        description="Type of workflow: comprehensive, routing, investment_agent, prompt_chaining, evaluator_optimizer",
+        description="Type of workflow (always 'comprehensive' - uses all specialists)",
         example="comprehensive"
     )
     focus: str = Field(
         default="comprehensive",
-        description="Analysis focus: comprehensive, news, earnings, technical, market",
+        description="Analysis focus: comprehensive, news, earnings, technical, market, forecast",
         example="comprehensive"
     )
 
@@ -122,10 +122,7 @@ async def analyze_stock(request: AnalysisRequest):
     
     try:
         # Validate workflow_type
-        valid_workflows = [
-            "comprehensive", "routing", "investment_agent",
-            "prompt_chaining", "evaluator_optimizer"
-        ]
+        valid_workflows = ["comprehensive"]
         if request.workflow_type not in valid_workflows:
             raise HTTPException(
                 status_code=400,
@@ -133,7 +130,7 @@ async def analyze_stock(request: AnalysisRequest):
             )
         
         # Validate focus
-        valid_focuses = ["comprehensive", "news", "earnings", "technical", "market"]
+        valid_focuses = ["comprehensive", "news", "earnings", "technical", "market", "forecast"]
         if request.focus not in valid_focuses:
             raise HTTPException(
                 status_code=400,
@@ -177,16 +174,6 @@ async def get_workflows():
                 "id": "comprehensive",
                 "name": "Comprehensive Analysis",
                 "description": "Routes to all specialist agents (news, earnings, market)"
-            },
-            {
-                "id": "routing",
-                "name": "Routing Workflow",
-                "description": "Routes to specialist agents based on focus"
-            },
-            {
-                "id": "investment_agent",
-                "name": "Investment Agent",
-                "description": "Uses main autonomous investment research agent"
             },
             {
                 "id": "prompt_chaining",
