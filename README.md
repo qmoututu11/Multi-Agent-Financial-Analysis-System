@@ -26,13 +26,13 @@ This system demonstrates advanced **agentic AI architecture** with:
   - **MarketSpecialistAgent**: Technical analysis and market trends
   - **ForecastSpecialistAgent**: Historical trend analysis and price forecasting
 
-### Agent Functions (33.8%)
+### Agent Functions
 - **Planning**: Autonomous research step planning
 - **Tool Usage**: Dynamic API and dataset integration
 - **Self-Reflection**: Quality assessment of outputs
 - **Learning**: Cross-run improvement and memory
 
-### Agentic Architecture (33.8%)
+### Agentic Architecture
 1. **Planner Agent**: LLM decides which specialist agents to run based on user query and focus
 2. **Reflection Nodes**: After each agent, LLM evaluates output quality and decides next action:
    - Continue to next agent
