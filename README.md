@@ -1,5 +1,4 @@
 # Multi-Agent Financial Analysis System
-## AAI-520 Group 3 Final Project
 
 This project implements a sophisticated **Agentic Multi-Agent Financial Analysis System** using LangChain and LangGraph for autonomous investment research and analysis.
 
@@ -288,21 +287,3 @@ forecast_result = forecast_agent.analyze("AAPL")
 - **Learning Progress**: Pattern recognition and improvement tracking
 - **Specialist Coordination**: Multi-agent collaboration efficiency
 - **Workflow Optimization**: Iterative refinement and enhancement
-
-## 👥 Team Members
-
-* **Maxime Boulat** - [https://github.com/MaximeBoulat](https://github.com/MaximeBoulat)
-* **Qinyao Mou** - [https://github.com/qmou11](https://github.com/qmou11)
-* **Dean P. Simmer** - [https://github.com/mojodean](https://github.com/mojodean)
-
-## 📄 License
-
-GNU GENERAL PUBLIC LICENSE Version 3
-
-## 🎓 Course Information
-
-This project is part of the **AAI-520** course in the Applied Artificial Intelligence Program at the University of San Diego (USD).
-
----
-
-**🎉 This multi-agent system demonstrates advanced AI architecture for autonomous financial analysis with continuous learning and improvement capabilities.**
